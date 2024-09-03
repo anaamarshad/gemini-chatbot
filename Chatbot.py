@@ -1,17 +1,25 @@
 import google.generativeai as genai
 import streamlit as st
+from dotenv import load_dotenv
+import os
 
-# Set up your Google API Key
-GOOGLE_API_KEY = "AIzaSyDN37IMca9e86BNKr6B1OkLbWoE-93CaPM"
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the API key from the environment variable
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 
 # Initialize the Generative Model
-# model = genai.GenerativeModel('gemini-pro')
 model = genai.GenerativeModel('gemini-1.5-flash')
-# Function to get response from the model
+
+# Function to get a response from the model
 def get_chatbot_response(user_input):
-    response = model.generate_content(user_input)
-    return response.text
+    try:
+        response = model.generate_content(user_input)
+        return response.text
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
 
 # Streamlit interface
 st.set_page_config(page_title="Simple ChatBot", layout="centered")
@@ -52,11 +60,6 @@ for user_message, bot_message in st.session_state.history:
     </div>
     """, unsafe_allow_html=True)
 
-# user_input = input("Enter your Prompt = ")
-# output = get_chatbot_response(user_input)
-
-# print(output)
-
 with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input("", max_chars=2000)
     submit_button = st.form_submit_button("Send")
@@ -65,5 +68,6 @@ with st.form(key="chat_form", clear_on_submit=True):
         if user_input:
             response = get_chatbot_response(user_input)
             st.session_state.history.append((user_input, response))
+            st.experimental_rerun()  # Refresh the page to update the chat
         else:
-            st.warning("Please Enter A Prompt")
+            st.warning("Please enter a prompt.")
